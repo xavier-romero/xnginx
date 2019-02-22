@@ -1,0 +1,17 @@
+log_format test2 '$remote_addr $host $request $request_time';
+
+server {
+    listen <%= @proxyport %>;
+	
+	access_log /var/log/nginx/test2.log test2;
+	
+	<% @localnetworks.each do |network| -%>
+	allow <%= network %>;
+	<% end -%>
+	deny all;
+
+    location / {
+        resolver 8.8.8.8;
+        proxy_pass http://$http_host$uri$is_args$args;
+    }
+}

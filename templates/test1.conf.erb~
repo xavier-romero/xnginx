@@ -1,0 +1,15 @@
+server {
+	listen 443 http2 ssl;
+
+    ssl_certificate <%= scope['xnginx::certdir'] %>/<%= @fqdn %>.crt;
+    ssl_certificate_key <%= @certdir %>/<%= @fqdn %>.key;
+    ssl_dhparam <%= @certdir %>/dhparam.pem;
+
+    server_name <%= @fqdn %>;
+	
+	<% @proxies.each do |proxy| -%>
+	location <%= proxy["source"] %> {
+		proxy_pass	<%= proxy["target"] %>;
+	}
+	<% end -%>
+}

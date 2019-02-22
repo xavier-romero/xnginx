@@ -1,0 +1,39 @@
+# A description of what this class does
+#
+# @summary A short summary of the purpose of this class
+#
+# @example
+#   include xnginx
+class xnginx ( $fqdn = 'domain.com', $certdir = '/etc/ssl/certs', proxies = [])
+{
+        package {'nginx':
+			ensure => installed,
+		}
+
+		exec {'create_self_signed_sslcert':
+			command => "openssl req -newkey rsa:2048 -nodes -keyout ${domain}.key  -x509 -days 365 -out ${fqdn}.crt -subj '/CN=${fqdn}'",
+			cwd     => $certdir,
+			creates => [ "${certdir}/${fqdn}.key", "${certdir}/${fqdn}.crt", ],
+			path    => ["/usr/bin", "/usr/sbin"]
+        }
+
+        exec {'create_dhparam':
+                command => "openssl dhparam -out ${certdir}/dhparam.pem 2048",
+                cwd     => $certdir,
+                creates => "${certdir}/dhparam.pem",
+                path    => ["/usr/bin", "/usr/sbin"]
+        }
+
+		file {'/etc/nginx/conf.d/test1.conf':
+			ensure => file,
+			require => Package['nginx'],
+			#content => ,
+			source => "puppet:///modules/xnginx/test1.conf",
+		}
+		
+		service {'nginx':
+			require => [ Package['nginx'], File['/etc/nginx/conf.d/test1.conf'], Exec['create_self_signed_sslcert'], Exec['create_dhparam'] ],
+			ensure => running,
+		}
+
+}
